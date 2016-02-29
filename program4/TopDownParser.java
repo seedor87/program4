@@ -25,16 +25,36 @@ public class TopDownParser {
 			tokens.addAll(lex.analyze(line));
 		}
 		br.close();
+		
+		/*
+		 * Throw out comments first 
+		 */
+		for(int i= 0; i < tokens.size(); i++) {
+			if(tokens.get(i).type == Type.COMMENT || tokens.get(i).type == Type.NULL_STRING) {
+				tokens.remove(i);
+			}
+		}
+		
 		Program();
     }
 	
 	public static boolean eat(boolean bool) {
+		System.out.println(bool);
 		return bool;
 	}
 	
 	public static void Program() {
-		mainClass();
-		while(tokens.peek().type != Type.RSQUARE) {
+		classDecl();
+	}
+	
+	private static void classDecl() {
+		eat(tokens.pop().c.equals("public"));
+		eat(tokens.pop().c.equals("class"));
+		Token className = tokens.pop();      //figure out what to do with the class name next phase
+		eat(tokens.pop().type == Type.LCURL);
+		mainMethod();
+		body();
+		while(tokens.peek().type != Type.RCURL) {
 			methDecl();
 		}
 	}
@@ -52,7 +72,7 @@ public class TopDownParser {
 		body();
 	}
 
-	public static void mainClass() {
+	public static void mainMethod() {
 		eat(tokens.pop().c.equals("public"));
 		eat(tokens.pop().c.equals("static"));
 		eat(tokens.pop().c.equals("void"));
@@ -62,20 +82,20 @@ public class TopDownParser {
 		eat(tokens.pop().type == Type.LSQUARE);
 		eat(tokens.pop().type == Type.RSQUARE);
 		Token args = tokens.pop();
-		eat(tokens.pop().type == Type.LPAREN);
+		eat(tokens.pop().type == Type.RPAREN);
 		body();
 	}
 	
 	private static void body() {
-		eat(tokens.pop().type == Type.LSQUARE);
-		while(tokens.peek().type != Type.RSQUARE) {	
+		eat(tokens.pop().type == Type.LCURL);
+		while(tokens.peek().type != Type.RCURL) {	
 			statement();
 		}
-		eat(tokens.pop().type == Type.RSQUARE);
+		eat(tokens.pop().type == Type.RCURL);
 	}
 
 	private static void statement() {
-		Token determinant = tokens.pop();
+		Token determinant = tokens.peek();
 		if (determinant.c.equals("while")) {
 			whileLoop();
 		}
@@ -86,12 +106,12 @@ public class TopDownParser {
 			ifStmt();
 		}
 		else if (determinant.type == Type.ATOM) {
-			if(tokens.peek().type == Type.OPERATOR) {
+			if(tokens.peek().type == Type.OPERATOR || tokens.peek().type == Type.ASSIGN) {
 				assignment();
 			}
 			methodCall();
 		}
-		else;		//no more statements left
+		else;		//no more options left
 		eat(tokens.pop().type == Type.SEMICOLON);
 	}
 
@@ -108,15 +128,25 @@ public class TopDownParser {
 	}
 	
 	private static void assignment() {
+		System.out.println(tokens.peek());
 		Token varName = tokens.pop();			//do something with varName operation and value in the next phase.
-		Token operation = tokens.peek();;
+		Token operation = tokens.peek();
 		if(operation.c.equals("=")) {
 			eat(tokens.pop().type == Type.ASSIGN);
 		}
 		else {
-			eat(operation.c.equals("="));
+			eat(tokens.pop().type == Type.ALT_OP);
 		}
-		Token value = tokens.pop();
+		Token value;
+		System.out.println(tokens.peek());
+		if(tokens.peek().type == Type.DQUOTE || tokens.peek().type == Type.SQUOTE) {
+			eat(tokens.pop().type == Type.DQUOTE);
+			value = tokens.pop();
+			eat(tokens.pop().type == Type.DQUOTE);
+		}
+		else {
+			value = tokens.pop();
+		}
 		eat(tokens.pop().type == Type.SEMICOLON);
 	}
 	
