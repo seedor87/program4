@@ -15,7 +15,7 @@ public class TopDownParser {
 	public static void main(String[] args) throws IOException {	
 		
 		// Read in from file put in collection tokens
-		File f = new File("/Users/robertseedorf/Desktop/sample.java");
+		File f = new File("sample");
 		FileInputStream fis = new FileInputStream(f);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		tokens = new LinkedList<Token>();
@@ -95,7 +95,7 @@ public class TopDownParser {
 	}
 
 	private static void statement() {
-		Token determinant = tokens.peek();
+		Token determinant = tokens.pop();
 		if (determinant.c.equals("while")) {
 			whileLoop();
 		}
@@ -109,7 +109,7 @@ public class TopDownParser {
 			if(tokens.peek().type == Type.OPERATOR || tokens.peek().type == Type.ASSIGN) {
 				assignment();
 			}
-			methodCall();
+			else methodCall();
 		}
 		else;		//no more options left
 		eat(tokens.pop().type == Type.SEMICOLON);
