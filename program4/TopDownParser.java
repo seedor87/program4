@@ -83,7 +83,6 @@ public class TopDownParser {
 		eat(tokens.pop().type == Type.RSQUARE);
 		Token args = tokens.pop();
 		eat(tokens.pop().type == Type.RPAREN);
-		body();
 	}
 	
 	private static void body() {
@@ -106,69 +105,77 @@ public class TopDownParser {
 			ifStmt();
 		}
 		else if (determinant.type == Type.ATOM) {
-			if(tokens.peek().type == Type.OPERATOR || tokens.peek().type == Type.ASSIGN) {
-				assignment();
+			if(tokens.peek().type == Type.ASSIGN) {
+				assignment(determinant);
 			}
-			else methodCall();
+			else if (tokens.peek().type == Type.OPERATOR)
+			{
+				assignment(determinant); //Needs a new method
+			}
+			else methodCall(determinant);
+
 		}
 		else;		//no more options left
 		eat(tokens.pop().type == Type.SEMICOLON);
 	}
 
-	private static void param() {
-		Token param = tokens.pop();				//do something with param in the next phase.
-		if(tokens.peek().type == Type.PERIOD) {
-			methodCall(param);
-		}
-		if(tokens.peek().type == Type.COMMA) {
-			eat(tokens.pop().type == Type.COMMA);
-			param();
+	private static void param()
+	{
+		if(tokens.peek().type != Type.RPAREN)
+		{
+			Token param = tokens.pop();                //do something with param in the next phase.
+			if (tokens.peek().type == Type.PERIOD)
+			{
+				methodCall(param);
+			}
+			if (tokens.peek().type == Type.COMMA)
+			{
+				eat(tokens.pop().type == Type.COMMA);
+				param();
+			}
 		}
 		else;			//no more params left
 	}
 	
-	private static void assignment() {
+	private static void assignment(Token varname) {
 		System.out.println(tokens.peek());
-		Token varName = tokens.pop();			//do something with varName operation and value in the next phase.
 		Token operation = tokens.peek();
 		if(operation.c.equals("=")) {
 			eat(tokens.pop().type == Type.ASSIGN);
 		}
 		else {
-			eat(tokens.pop().type == Type.ALT_OP);
+			eat(tokens.pop().type == Type.OPERATOR);
 		}
-		Token value;
-		System.out.println(tokens.peek());
-		if(tokens.peek().type == Type.DQUOTE || tokens.peek().type == Type.SQUOTE) {
+		Token value = tokens.pop();
+		System.out.println(value);
+		if(value.type == Type.DQUOTE || value.type == Type.SQUOTE) {
+			eat(value.type == Type.DQUOTE);
+			if (tokens.peek().type == Type.DQUOTE) value = new Token(Type.NULL_STRING, "");
+			else value = tokens.pop();
 			eat(tokens.pop().type == Type.DQUOTE);
-			value = tokens.pop();
-			eat(tokens.pop().type == Type.DQUOTE);
 		}
-		else {
-			value = tokens.pop();
+		else if (tokens.peek().type == Type.PERIOD)
+		{
+			methodCall(value);
 		}
-		eat(tokens.pop().type == Type.SEMICOLON);
-	}
-	
-	private static void methodCall() {
-		if(tokens.peek().type == Type.PERIOD) {
-			eat(tokens.pop().c.equals("."));
+		else if (tokens.peek().type == Type.OPERATOR)
+		{
+			eat(tokens.pop().type == Type.OPERATOR);
+			eat(tokens.pop().type == Type.ATOM);
 		}
-		else {
-			Token owner = tokens.pop();
-			eat(tokens.pop().type == Type.PERIOD);
-			
+		else
+		{
+			value = value;
 		}
-		Token methName = tokens.pop();
-		eat(tokens.pop().type == Type.LPAREN);
-		param();
-		eat(tokens.pop().type == Type.RPAREN);
 	}
 	
 	private static void methodCall(Token tok) {
-		Token owner = tok;							//see above
-		eat(tokens.pop().type == Type.PERIOD);
-		Token methName = tokens.pop();
+		while(tokens.peek().type == Type.PERIOD)
+		{
+			eat(tokens.pop().type == Type.PERIOD);
+			eat(tokens.pop().type == Type.ATOM);					//see above
+		}
+
 		eat(tokens.pop().type == Type.LPAREN);
 		param();
 		eat(tokens.pop().type == Type.RPAREN);
@@ -181,6 +188,13 @@ public class TopDownParser {
 	
 	private static void forLoop() {
 		// TODO Auto-generated method stub
+		eat(tokens.pop().type == Type.LPAREN);
+		while(tokens.peek().type != Type.RPAREN)
+		{
+			statement();
+		}
+		eat(tokens.pop().type == Type.RPAREN);
+		body();
 		
 	}
 	
