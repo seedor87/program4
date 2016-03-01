@@ -1,4 +1,4 @@
-package program4;
+package program4.program4;
 
 /**
  * This class is the enumeration of useful reserve symbols to be used in further lexical analysis of the line being processed

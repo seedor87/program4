@@ -1,4 +1,4 @@
-package program4;
+package program4.program4;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -7,15 +7,31 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 
+/**
+ * This is our implementation of a top  down parser for our language. 
+ * During our work we discovered our language to be LL(2) and we have amended our language considerably to allow us to write this
+ * We have fixed our grammar so that it now reflects the cahgnes we have made. it is included with this submission.
+ * 
+ * @author Robert J Seedorf, Bill Clark
+ * @date 3-1-16
+ * 
+ */
 public class TopDownParser {
 
 	private static LexicalAnalyzer lex = new LexicalAnalyzer();
 	private static LinkedList<Token> tokens;
 	
+	/**
+	 * the driver first collects the input from a source, in this case via file input
+	 * The input is lexically analyzed, the comments and  whitespace are removed from the collection of generated tokens,
+	 * and the Parser is initialized with Program()
+	 * @param args
+	 * @throws IOException
+	 */
 	public static void main(String[] args) throws IOException {	
 		
 		// Read in from file put in collection tokens
-		File f = new File("sample");
+		File f = new File("/Users/robertseedorf/Documents/workspace/Compiler Design/src/program4/program4/sample");
 		FileInputStream fis = new FileInputStream(f);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		tokens = new LinkedList<Token>();
@@ -27,7 +43,7 @@ public class TopDownParser {
 		br.close();
 		
 		/*
-		 * Throw out comments first 
+		 * Throw out comments first
 		 */
 		for(int i= 0; i < tokens.size(); i++) {
 			if(tokens.get(i).type == Type.COMMENT || tokens.get(i).type == Type.NULL_STRING) {
@@ -138,7 +154,6 @@ public class TopDownParser {
 	}
 	
 	private static void assignment(Token varname) {
-		System.out.println(tokens.peek());
 		Token operation = tokens.peek();
 		if(operation.c.equals("=")) {
 			eat(tokens.pop().type == Type.ASSIGN);
@@ -147,7 +162,6 @@ public class TopDownParser {
 			eat(tokens.pop().type == Type.OPERATOR);
 		}
 		Token value = tokens.pop();
-		System.out.println(value);
 		if(value.type == Type.DQUOTE || value.type == Type.SQUOTE) {
 			eat(value.type == Type.DQUOTE);
 			if (tokens.peek().type == Type.DQUOTE) value = new Token(Type.NULL_STRING, "");
@@ -182,12 +196,13 @@ public class TopDownParser {
 	}
 	
 	private static void whileLoop() {
-		// TODO Auto-generated method stub
-		
+		eat(tokens.pop().type == Type.LPAREN);
+		Token condition = tokens.pop();
+		eat(tokens.pop().type == Type.RPAREN);
+		body();
 	}
 	
 	private static void forLoop() {
-		// TODO Auto-generated method stub
 		eat(tokens.pop().type == Type.LPAREN);
 		while(tokens.peek().type != Type.RPAREN)
 		{
@@ -199,8 +214,21 @@ public class TopDownParser {
 	}
 	
 	private static void ifStmt() {
-		// TODO Auto-generated method stub
-		
+		eat(tokens.pop().type == Type.LPAREN);
+		statement();
+		eat(tokens.pop().type == Type.RPAREN);
+		body();
+		while(tokens.peek().c.equals("else if")) {
+			eat(tokens.pop().c.equals("else if"));
+			eat(tokens.pop().type == Type.LPAREN);
+			statement();
+			eat(tokens.pop().type == Type.RPAREN);
+			body();
+		}
+		if(tokens.peek().c.equals("else")) {
+			eat(tokens.pop().c.equals("else"));
+			body();
+		}
 	}
 	
 	
