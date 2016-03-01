@@ -1,4 +1,4 @@
-package program4.program4;
+package program4;
 
 /**
  * This code has been adapted from a source on the Internet to be described, Found at:

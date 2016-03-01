@@ -1,4 +1,4 @@
-package program4.program4;
+package program4;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,6 +20,7 @@ public class TopDownParser {
 
 	private static LexicalAnalyzer lex = new LexicalAnalyzer();
 	private static LinkedList<Token> tokens;
+	static int tokenLength = 0;
 	
 	/**
 	 * the driver first collects the input from a source, in this case via file input
@@ -31,7 +32,7 @@ public class TopDownParser {
 	public static void main(String[] args) throws IOException {	
 		
 		// Read in from file put in collection tokens
-		File f = new File("/Users/robertseedorf/Documents/workspace/Compiler Design/src/program4/program4/sample");
+		File f = new File("BadSample");
 		FileInputStream fis = new FileInputStream(f);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		tokens = new LinkedList<Token>();
@@ -50,63 +51,94 @@ public class TopDownParser {
 				tokens.remove(i);
 			}
 		}
-		
+
+		tokenLength = tokens.size();
 		Program();
     }
 	
-	public static boolean eat(boolean bool) {
-		System.out.println(bool);
-		return bool;
+//	public static boolean eat(boolean bool) {
+//		System.out.println(bool);
+//		return bool;
+//	}
+
+	public static boolean eat(Token t, Type type)
+	{
+		if(t.type == type)
+		{
+			return true;
+		}
+		else
+		{
+			System.out.println("ERROR: " + t + " is not of type " + type + " Token Number: " + (tokenLength - tokens.size()-1));
+		}
+		return false;
+	}
+
+	public static boolean eat(Token t, String s)
+	{
+		if(t.c.equals(s))
+		{
+			return true;
+		}
+		else
+		{
+			System.out.println("ERROR: " + t + " is not equal to " + s + " Token Number: " + (tokenLength - tokens.size()-1));
+		}
+		return false;
 	}
 	
-	public static void Program() {
+	public static void Program()
+	{
+		printTokens();
 		classDecl();
+		System.out.println("Token Left: " + tokens.size());
 	}
 	
 	private static void classDecl() {
-		eat(tokens.pop().c.equals("public"));
-		eat(tokens.pop().c.equals("class"));
+		eat(tokens.pop(), "public");
+		eat(tokens.pop(), "class");
 		Token className = tokens.pop();      //figure out what to do with the class name next phase
-		eat(tokens.pop().type == Type.LCURL);
+		eat(tokens.pop(), Type.LCURL);
 		mainMethod();
 		body();
 		while(tokens.peek().type != Type.RCURL) {
 			methDecl();
 		}
+		eat(tokens.pop(), Type.RCURL);
 	}
 	
 	private static void methDecl() {
-		eat(tokens.pop().c.equals("public"));
-		eat(tokens.pop().c.equals("static"));
+		eat(tokens.pop(), "public");
+		eat(tokens.pop(), "static");
 		Token retType = tokens.pop();
 		Token methName = tokens.pop();
-		eat(tokens.pop().type == Type.LPAREN);
+		eat(tokens.pop(), Type.LPAREN);
 		if(tokens.peek().type != Type.RPAREN) {
 			param();
 		}
-		eat(tokens.pop().type == Type.RPAREN);
+		eat(tokens.pop(), Type.RPAREN);
 		body();
 	}
 
 	public static void mainMethod() {
-		eat(tokens.pop().c.equals("public"));
-		eat(tokens.pop().c.equals("static"));
-		eat(tokens.pop().c.equals("void"));
-		eat(tokens.pop().c.equals("main"));
-		eat(tokens.pop().type == Type.LPAREN);
-		eat(tokens.pop().c.equals("String"));
-		eat(tokens.pop().type == Type.LSQUARE);
-		eat(tokens.pop().type == Type.RSQUARE);
+		eat(tokens.pop(), "public");
+		eat(tokens.pop(), "static");
+		eat(tokens.pop(), "void");
+		eat(tokens.pop(), "main");
+		eat(tokens.pop(), Type.LPAREN);
+		eat(tokens.pop(), "String");
+		eat(tokens.pop(), Type.LSQUARE);
+		eat(tokens.pop(), Type.RSQUARE);
 		Token args = tokens.pop();
-		eat(tokens.pop().type == Type.RPAREN);
+		eat(tokens.pop(), Type.RPAREN);
 	}
 	
 	private static void body() {
-		eat(tokens.pop().type == Type.LCURL);
+		eat(tokens.pop(), Type.LCURL);
 		while(tokens.peek().type != Type.RCURL) {	
 			statement();
 		}
-		eat(tokens.pop().type == Type.RCURL);
+		eat(tokens.pop(), Type.RCURL);
 	}
 
 	private static void statement() {
@@ -128,11 +160,16 @@ public class TopDownParser {
 			{
 				assignment(determinant); //Needs a new method
 			}
+			else if (tokens.peek().type == Type.ALT_OP)
+			{
+				assignment(determinant); //Needs a new method
+			}
 			else methodCall(determinant);
+			eat(tokens.pop(), Type.SEMICOLON);
 
 		}
 		else;		//no more options left
-		eat(tokens.pop().type == Type.SEMICOLON);
+
 	}
 
 	private static void param()
@@ -146,7 +183,7 @@ public class TopDownParser {
 			}
 			if (tokens.peek().type == Type.COMMA)
 			{
-				eat(tokens.pop().type == Type.COMMA);
+				eat(tokens.pop(), Type.COMMA);
 				param();
 			}
 		}
@@ -155,18 +192,25 @@ public class TopDownParser {
 	
 	private static void assignment(Token varname) {
 		Token operation = tokens.peek();
-		if(operation.c.equals("=")) {
-			eat(tokens.pop().type == Type.ASSIGN);
+		if(operation.type == Type.ASSIGN)
+		{
+			eat(tokens.pop(), Type.ASSIGN);
 		}
-		else {
-			eat(tokens.pop().type == Type.OPERATOR);
+		else if(operation.type == Type.ALT_OP)
+		{
+			eat(tokens.pop(), Type.ALT_OP);
+		}
+		else
+		{
+			eat(tokens.pop(), Type.OPERATOR);
 		}
 		Token value = tokens.pop();
-		if(value.type == Type.DQUOTE || value.type == Type.SQUOTE) {
-			eat(value.type == Type.DQUOTE);
+		if(value.type == Type.DQUOTE || value.type == Type.SQUOTE)
+		{
+			eat(value, Type.DQUOTE);
 			if (tokens.peek().type == Type.DQUOTE) value = new Token(Type.NULL_STRING, "");
 			else value = tokens.pop();
-			eat(tokens.pop().type == Type.DQUOTE);
+			eat(tokens.pop(), Type.DQUOTE);
 		}
 		else if (tokens.peek().type == Type.PERIOD)
 		{
@@ -174,8 +218,8 @@ public class TopDownParser {
 		}
 		else if (tokens.peek().type == Type.OPERATOR)
 		{
-			eat(tokens.pop().type == Type.OPERATOR);
-			eat(tokens.pop().type == Type.ATOM);
+			eat(tokens.pop(), Type.OPERATOR);
+			eat(tokens.pop(), Type.ATOM);
 		}
 		else
 		{
@@ -186,48 +230,61 @@ public class TopDownParser {
 	private static void methodCall(Token tok) {
 		while(tokens.peek().type == Type.PERIOD)
 		{
-			eat(tokens.pop().type == Type.PERIOD);
-			eat(tokens.pop().type == Type.ATOM);					//see above
+			eat(tokens.pop(), Type.PERIOD);
+			eat(tokens.pop(), Type.ATOM);					//see above
 		}
 
-		eat(tokens.pop().type == Type.LPAREN);
+		eat(tokens.pop(), Type.LPAREN);
 		param();
-		eat(tokens.pop().type == Type.RPAREN);
+		eat(tokens.pop(), Type.RPAREN);
 	}
 	
 	private static void whileLoop() {
-		eat(tokens.pop().type == Type.LPAREN);
-		Token condition = tokens.pop();
-		eat(tokens.pop().type == Type.RPAREN);
+		eat(tokens.pop(), Type.LPAREN);
+		statement();
+		eat(tokens.pop(), Type.RPAREN);
 		body();
 	}
 	
 	private static void forLoop() {
-		eat(tokens.pop().type == Type.LPAREN);
+		eat(tokens.pop(), Type.LPAREN);
 		while(tokens.peek().type != Type.RPAREN)
 		{
 			statement();
 		}
-		eat(tokens.pop().type == Type.RPAREN);
+		eat(tokens.pop(), Type.RPAREN);
 		body();
 		
 	}
 	
 	private static void ifStmt() {
-		eat(tokens.pop().type == Type.LPAREN);
+		eat(tokens.pop(), Type.LPAREN);
 		statement();
-		eat(tokens.pop().type == Type.RPAREN);
+		eat(tokens.pop(), Type.RPAREN);
 		body();
-		while(tokens.peek().c.equals("else if")) {
-			eat(tokens.pop().c.equals("else if"));
-			eat(tokens.pop().type == Type.LPAREN);
-			statement();
-			eat(tokens.pop().type == Type.RPAREN);
-			body();
+		while(tokens.peek().c.equals("else")) {
+			eat(tokens.pop(), "else");
+			if(tokens.peek().c.equals("if"))
+			{
+				eat(tokens.pop(), "if");
+				eat(tokens.pop(), Type.LPAREN);
+				statement();
+				eat(tokens.pop(), Type.RPAREN);
+				body();
+			}
+			else
+			{
+				body();
+			}
+
 		}
-		if(tokens.peek().c.equals("else")) {
-			eat(tokens.pop().c.equals("else"));
-			body();
+	}
+
+	public static void printTokens()
+	{
+		for(int x = 0; x < tokens.size();x++)
+		{
+			System.out.println(x + " " + tokens.get(x));
 		}
 	}
 	

@@ -1,0 +1,28 @@
+# comment; written by Bob S. and Bill C.
+public class Example
+{
+
+    public static void main(String[] args)
+    {
+
+    	x = 5;
+    	y = 10;
+    	z = 15;
+    	if(x ?= y;)
+    	{
+    	    y = x;
+    	}
+    	else if (y < z;)
+    	{
+    	    while(y < z;)
+    	    {
+    	        y = y + 1;
+    	    }
+    	}
+    	else
+    	{
+    	    System.out.println(y);
+    	}
+
+    }
+}

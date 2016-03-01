@@ -1,4 +1,6 @@
 # comment; written by Bob S. and Bill C.
+# comment; Missing a period in the method call on line 13
+# Missing a Semicolon on line 22
 public class Example
 {
 
@@ -9,7 +11,7 @@ public class Example
      	alternate = "zabcdefghijklmnopqrstuvwxy";
         in = "helloworld";
         out = "";
-        length = in.length();
+        length = inlength();
         for(i = 0; i < in.length(); i = i+1;)
         {
             newindex = alphabet.indexOf(in.charAt(i));
@@ -17,7 +19,6 @@ public class Example
             out = out + newchar;
 
         }
-        System.out.println(out);
-        
+        System.out.println(out)
+
     }
-}
